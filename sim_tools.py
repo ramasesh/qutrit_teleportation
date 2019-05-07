@@ -103,3 +103,42 @@ def vectorized_dm_to_dm(vectorized_dm):
     assert dim_sys * dim_sys == vectorized_dm.shape[0]
 
     return vectorized_dm.reshape((dim_sys, dim_sys)).T
+
+def random_pure_state(dim_sys=3):
+    """ Samples a Haar-random pure state and returns it"""
+
+    psi = np.random.randn(dim_sys)
+    return psi/np.linalg.norm(psi, ord=2)
+
+def rot_x(theta):
+    """Rotation matrix around the x axis"""
+    c, s = np.cos(theta / 2), np.sin(theta / 2)
+    return np.matrix([[c, -1j * s], [-1j * s, c]])
+
+def rot_y(theta):
+    """Rotation matrix around the y axis"""
+    c, s = np.cos(theta / 2), np.sin(theta / 2)
+    return np.matrix([[c, -s], [s, c]])
+
+def rot_z(theta):
+    """Rotation matrix around the z axis"""
+    exp_z = np.exp(1j * theta / 2.)
+    exp_z_inv = np.exp(-1j * theta / 2.)
+    return np.matrix([[exp_z_inv, 0], [0, exp_z]])
+
+def bit_to_trit(m, subspace='GE'):
+    """Embeds a single-qubit unitary in a 3X3 (qutrit) matrix"""
+    out = np.eye(3, dtype='complex')
+    
+    if subspace in ['GE', 'EG']:
+        out[0:2, 0:2] = m
+    elif subpsace in ['EF', 'FE']:
+        out[1:3, 1:3] = m
+    elif subspace in ['GF', 'FG']:
+        out[0,0] = m[0,0]
+        out[0,2] = m[0,1]
+        out[2,0] = m[1,0]
+        out[2,2] = m[1,1]
+    
+    return out
+

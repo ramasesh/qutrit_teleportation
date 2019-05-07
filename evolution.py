@@ -7,17 +7,9 @@ from importlib import reload
 
 import interaction_and_decay as iad
 
-import fundamental_gates
-reload(fundamental_gates)
-from fundamental_gates import *
+import fundamental_gates as fg
 
-import embed_functions
-reload(embed_functions)
-from embed_functions import *
-
-import gate_sequences
-reload(gate_sequences)
-from gate_sequences import *
+import embed_functions as embed
 
 ###
 # Combine parameters and operators to form Hamiltonian and Lindbladian for the system
@@ -27,6 +19,9 @@ from gate_sequences import *
 #With dephasing
 # L_1q = [[ np.sqrt(iad.gamma1GE[i])*iad.lower10, np.sqrt(iad.gamma1EF[i])*iad.lower21, \
 #         np.sqrt(iad.gammaphiGE[i])*Z10, np.sqrt(iad.gammaphiEF[i])*Z21, np.sqrt(iad.gammaphiFG[i])*Z02] for i in range(num_q)]
+
+num_q = 2
+
 #Without dephasing
 L_1q = [[ np.sqrt(iad.gamma1GE[i])*iad.lower10, np.sqrt(iad.gamma1EF[i])*iad.lower21] for i in range(num_q)]
 #2-qutrit Lindblad operators
@@ -35,7 +30,6 @@ L = [np.kron(l1,np.eye(3)) for l1 in L_1q[0]] + [np.kron(np.eye(3),l1) for l1 in
 labelToNum_dict = { 1:0, 0:1, 7:2, 6:3, 5:4 }
 numToLabel_dict = { 0:1, 1:0, 2:7, 3:6, 4:5 }
 
-
 def depol_channel(rho,p,i):
     """
     Implements fully depolarizing channel on qutrit i (use 01234 labelling) with probability p on full density matrix rho
@@ -43,11 +37,11 @@ def depol_channel(rho,p,i):
     # rho -> (1-p)*rho + p*1/d = (1-p)*rho + p*sum( P . rho . P^dagger )/d^2
     num_q = round(math.log(np.shape(rho)[0],3)/2) #determine number of qutrits from size of rho
     #Define qutrit pauli matrices
-    Xs = [np.eye(3), X, X.T]
-    Zs = [np.eye(3), Z, Z.conj()]
+    Xs = [np.eye(3), fg.X, fg.X.T]
+    Zs = [np.eye(3), fg.Z, fg.Z.conj()]
     paulis = [Xop.dot(Zop) for Xop in Xs for Zop in Zs]
     #embed paulis onto correct qutrits
-    paulis_emb = [embedGate(pauli,i,num_q) for pauli in paulis]
+    paulis_emb = [embed.embedGate(pauli,i,num_q) for pauli in paulis]
     rho_f = rho*(1.-p)
     for P in paulis_emb:
         rho_f += p*P.dot(rho)/3**2
@@ -74,17 +68,17 @@ def getHandG(q_list):
     H_2 = [np.diag([0,0,0,   0,iad.alpha_11[i],iad.alpha_12[i],   0,iad.alpha_21[i],iad.alpha_22[i]]) for i in pair_list] #12 gain phase
     H_full = 0.*sps.eye(3**(2*len(q_list)))
     for j in range(len(pair_list)):
-        H_full = H_full + embed2Ham(H_2[j],pair_list[j],len(q_list))
+        H_full = H_full + embed.embed2Ham(H_2[j],pair_list[j],len(q_list))
         
     #1-qutrit Lindblad operators
     L_1q = [[ np.sqrt(iad.gamma1GE[i])*iad.lower10, np.sqrt(iad.gamma1EF[i])*iad.lower21, \
-        np.sqrt(iad.gammaphiGE[i])*iad.Z10, np.sqrt(iad.gammaphiEF[i])*iad.Z21, np.sqrt(iad.gammaphiFG[i])*iad.Z02] for i in range(len(q_list))]
+        np.sqrt(iad.gammaphiGE[i])*iad.Z0, np.sqrt(iad.gammaphiEF[i])*iad.Z1, np.sqrt(iad.gammaphiFG[i])*iad.Z2] for i in range(len(q_list))]
     
     #Kron prod just enough
     #Multi-qutrit Lindblad operators
     L = []
     for i in range(len(q_list)):
-        L += [embedNoDouble(l1,q_list_num[i],len(q_list)) for l1 in L_1q[i]]
+        L += [embed.embedNoDouble(l1,q_list_num[i],len(q_list)) for l1 in L_1q[i]]
         
     #2-qutrit Linblad evolution matrix
     Ls = [sps.kron(Lm.conj(),Lm) - (1./2.)*sps.kron(sps.eye(np.shape(Lm)[0]),(Lm.conj().T).dot(Lm)) \
@@ -118,11 +112,11 @@ def getHandGExp(q_list,T,num_trot,decoh=True,dephas = True):
     #H_full = 0.*sps.eye(3**(2*num_q))
     H_full_exp = sps.eye(3**(2*num_q))
     for j in range(len(pair_list)):
-        #H_full = H_full + embed2Ham(H_2[j],pair_list[j],num_q)
-        H_full_exp = H_full_exp.dot(embed2Gate(H_2_exp[j],pair_list[j],num_q))    
+        #H_full = H_full + embed.embed2Ham(H_2[j],pair_list[j],num_q)
+        H_full_exp = H_full_exp.dot(embed.embed2Gate(H_2_exp[j],pair_list[j],num_q))    
 
     #1-qutrit Lindblad operators
-    L_1q = [[ np.sqrt(iad.gamma1GE[i])*iad.lower10, np.sqrt(iad.gamma1EF[i])*iad.lower21, float(dephas)*np.sqrt(iad.gammaphiGE[i])*iad.Z10, float(dephas)*np.sqrt(iad.gammaphiEF[i])*iad.Z21, float(dephas)*np.sqrt(iad.gammaphiFG[i])*iad.Z02] for i in q_list_num]
+    L_1q = [[ np.sqrt(iad.gamma1GE[i])*iad.lower10, np.sqrt(iad.gamma1EF[i])*iad.lower21, float(dephas)*np.sqrt(iad.gammaphiGE[i])*iad.Z0, float(dephas)*np.sqrt(iad.gammaphiEF[i])*iad.Z1, float(dephas)*np.sqrt(iad.gammaphiFG[i])*iad.Z2] for i in q_list_num]
 
     #Embed, multiply, embed, and add up 1-qutrit operators to get Lindbladian from decay only
     G_exp = sps.eye(3**(2*num_q))
@@ -132,12 +126,12 @@ def getHandGExp(q_list,T,num_trot,decoh=True,dephas = True):
             totalLi += np.kron(np.kron(Lm.conj(),np.eye(3**(num_q-1))),Lm) - \
                 (1./2.)*np.kron(np.kron(np.eye(3),np.eye(3**(num_q-1))),np.dot(Lm.conj().T,Lm)) \
                 - (1./2.)*np.kron(np.kron(np.dot(Lm.conj().T,Lm),np.eye(3**(num_q-1))),np.eye(3))
-        G_exp = G_exp.dot(embedLKron(spla.expm(deltaT*totalLi),i,len(q_list))) #exponentiate term and multiply onto G
+        G_exp = G_exp.dot(embed.embedLKron(spla.expm(deltaT*totalLi),i,len(q_list))) #exponentiate term and multiply onto G
     
     #Multi-qutrit Lindblad operators - NOT NEEDED FOR EXPONENTIAL
 #     L = []
 #     for i in range(num_q):
-#         L += [embedNoDouble(l1,q_list_num[i],len(q_list)) for l1 in L_1q[i]]
+#         L += [embed.embedNoDouble(l1,q_list_num[i],len(q_list)) for l1 in L_1q[i]]
 #     #2-qutrit Linblad evolution matrix
 #     Ls = [sps.kron(Lm.conj(),Lm) - (1./2.)*sps.kron(sps.eye(np.shape(Lm)[0]),(Lm.conj().T).dot(Lm)) \
 #         - (1./2.)*sps.kron((Lm.conj().T).dot(Lm),sps.eye(np.shape(Lm)[0])) for Lm in L]
@@ -188,7 +182,6 @@ def actFullGateOnState(gate,rho_init,q_list,num_trot = 10,decoh=True,dephas = Tr
     num_q = round(math.log(np.shape(rho_init)[0],3)/2) #determine number of qutrits from size of rho
     rho = rho_init
     time_evol_saved = {}
-   
 
     for action in gate:
         if type(action) != tuple:
@@ -200,10 +193,10 @@ def actFullGateOnState(gate,rho_init,q_list,num_trot = 10,decoh=True,dephas = Tr
                 rho = evol.dot(rho)
                 time_evol_saved[action] = evol
         elif type(action) == tuple and len(action) == 2:
-            rho = (embedGate(gate_dict[action[0]],action[1],num_q)).dot(rho) #embed gate to act on action[1]^th qubit, act
+            rho = (embed.embedGate(fg.gate_dict[action[0]],action[1],num_q)).dot(rho) #embed gate to act on action[1]^th qubit, act
         elif type(action) == tuple and len(action) == 3: #single qutrit phase rotations
             gate = np.eye(3,dtype=complex)
             gate[action[0],action[0]] = np.exp(1j*action[2]) #set diagonal element to phase
-            rho = (embedGate(gate,action[1],num_q)).dot(rho) #embed gate to act on action[1]^th qubit, act
+            rho = (embed.embedGate(gate,action[1],num_q)).dot(rho) #embed gate to act on action[1]^th qubit, act
     return rho
 

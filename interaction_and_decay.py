@@ -8,13 +8,7 @@ import scipy as sp
 import scipy.linalg as spla
 import scipy.sparse as sps
 
-import embed_functions
-reload(embed_functions)
-from embed_functions import *
-
 import yaml
-
-num_q = 2
 
 with open('qutrit_decay.yaml', 'r') as f:
     decay_parameters = yaml.load(f)
@@ -98,11 +92,8 @@ alpha_22 = 2*np.pi*np.array(alpha_22)
 #Set up decay operators
 lower21 = np.asarray([[0,0,0],[0,0,1],[0,0,0]]) #depolarizing
 lower10 = np.asarray([[0,1,0],[0,0,0],[0,0,0]])
-Z21 = np.diag([0,-1,1]) #dephasing
-Z10 = np.diag([-1,1,0])
-Z02 = np.diag([1,0,-1])
-#Vinay's dephasing operators
-# Z10 = np.diag([1,-1,-1])
-# Z21 = np.diag([-1,1,-1])
-# Z02 = np.diag([-1,-1,1])
+
+Z0 = np.diag([1,-1,-1])/np.sqrt(np.sqrt(3))
+Z1 = np.diag([-1,1,-1])/np.sqrt(np.sqrt(3))
+Z2 = np.diag([-1,-1,1])/np.sqrt(np.sqrt(3))
 

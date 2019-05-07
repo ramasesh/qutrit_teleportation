@@ -1,29 +1,29 @@
 Q1:
-    T1_GE: 30
+    T1_GE: 60
     Tphi_GE: 200
     T1_EF: 30
     Tphi_EF: 200
     Tphi_FG: 800
 Q0:
-    T1_GE: 30
+    T1_GE: 60
     Tphi_GE: 200
     T1_EF: 30
     Tphi_EF: 200
     Tphi_FG: 800
 Q7:
-    T1_GE: 30
+    T1_GE: 60
     Tphi_GE: 200
     T1_EF: 30
     Tphi_EF: 200
     Tphi_FG: 800
 Q6:
-    T1_GE: 30
+    T1_GE: 60
     Tphi_GE: 200
     T1_EF: 30
     Tphi_EF: 200
     Tphi_FG: 800
 Q5:
-    T1_GE: 30
+    T1_GE: 60
     Tphi_GE: 200
     T1_EF: 30
     Tphi_EF: 200

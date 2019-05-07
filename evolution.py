@@ -5,12 +5,11 @@ import scipy.sparse as sps
 import math
 from importlib import reload
 
+import interaction_and_decay as iad
+
 import fundamental_gates
-import interaction_and_decay
 reload(fundamental_gates)
-reload(interaction_and_decay)
 from fundamental_gates import *
-from interaction_and_decay import *
 
 import embed_functions
 reload(embed_functions)
@@ -26,10 +25,10 @@ from gate_sequences import *
 
 #1-qutrit Lindblad operators
 #With dephasing
-# L_1q = [[ np.sqrt(gamma1GE[i])*lower10, np.sqrt(gamma1EF[i])*lower21, \
-#         np.sqrt(gammaphiGE[i])*Z10, np.sqrt(gammaphiEF[i])*Z21, np.sqrt(gammaphiFG[i])*Z02] for i in range(num_q)]
+# L_1q = [[ np.sqrt(iad.gamma1GE[i])*iad.lower10, np.sqrt(iad.gamma1EF[i])*iad.lower21, \
+#         np.sqrt(iad.gammaphiGE[i])*Z10, np.sqrt(iad.gammaphiEF[i])*Z21, np.sqrt(iad.gammaphiFG[i])*Z02] for i in range(num_q)]
 #Without dephasing
-L_1q = [[ np.sqrt(gamma1GE[i])*lower10, np.sqrt(gamma1EF[i])*lower21] for i in range(num_q)]
+L_1q = [[ np.sqrt(iad.gamma1GE[i])*iad.lower10, np.sqrt(iad.gamma1EF[i])*iad.lower21] for i in range(num_q)]
 #2-qutrit Lindblad operators
 L = [np.kron(l1,np.eye(3)) for l1 in L_1q[0]] + [np.kron(np.eye(3),l1) for l1 in L_1q[1]]
 
@@ -72,14 +71,14 @@ def getHandG(q_list):
             if q1 == q2 + 1:
                 pair_list.append(q2)
     #Get list of 2-qutrit Hamiltonians, and their Lindbladian doubles
-    H_2 = [np.diag([0,0,0,   0,alpha_11[i],alpha_12[i],   0,alpha_21[i],alpha_22[i]]) for i in pair_list] #12 gain phase
+    H_2 = [np.diag([0,0,0,   0,iad.alpha_11[i],iad.alpha_12[i],   0,iad.alpha_21[i],iad.alpha_22[i]]) for i in pair_list] #12 gain phase
     H_full = 0.*sps.eye(3**(2*len(q_list)))
     for j in range(len(pair_list)):
         H_full = H_full + embed2Ham(H_2[j],pair_list[j],len(q_list))
         
     #1-qutrit Lindblad operators
-    L_1q = [[ np.sqrt(gamma1GE[i])*lower10, np.sqrt(gamma1EF[i])*lower21, \
-        np.sqrt(gammaphiGE[i])*Z10, np.sqrt(gammaphiEF[i])*Z21, np.sqrt(gammaphiFG[i])*Z02] for i in range(len(q_list))]
+    L_1q = [[ np.sqrt(iad.gamma1GE[i])*iad.lower10, np.sqrt(iad.gamma1EF[i])*iad.lower21, \
+        np.sqrt(iad.gammaphiGE[i])*iad.Z10, np.sqrt(iad.gammaphiEF[i])*iad.Z21, np.sqrt(iad.gammaphiFG[i])*iad.Z02] for i in range(len(q_list))]
     
     #Kron prod just enough
     #Multi-qutrit Lindblad operators
@@ -114,19 +113,20 @@ def getHandGExp(q_list,T,num_trot,decoh=True,dephas = True):
                 pair_list.append(q2)
                 
     #Figure out Hamiltonians And Hamiltonian exponential
-    H_2 = [np.diag([0,0,0,   0,alpha_11[i],alpha_12[i],   0,alpha_21[i],alpha_22[i]]) for i in pair_list] #12 gain phase
-    H_2_exp = [np.diag(np.exp(-1j*deltaT*np.array([0,0,0,   0,alpha_11[i],alpha_12[i],   0,alpha_21[i],alpha_22[i]]))) for i in pair_list] #12 gain phase
+    H_2 = [np.diag([0,0,0,   0,iad.alpha_11[i],iad.alpha_12[i],   0,iad.alpha_21[i],iad.alpha_22[i]]) for i in pair_list] #12 gain phase
+    H_2_exp = [np.diag(np.exp(-1j*deltaT*np.array([0,0,0,   0,iad.alpha_11[i],iad.alpha_12[i],   0,iad.alpha_21[i],iad.alpha_22[i]]))) for i in pair_list] #12 gain phase
     #H_full = 0.*sps.eye(3**(2*num_q))
     H_full_exp = sps.eye(3**(2*num_q))
     for j in range(len(pair_list)):
         #H_full = H_full + embed2Ham(H_2[j],pair_list[j],num_q)
         H_full_exp = H_full_exp.dot(embed2Gate(H_2_exp[j],pair_list[j],num_q))    
+
     #1-qutrit Lindblad operators
-    L_1q = [[ np.sqrt(gamma1GE[i])*lower10, np.sqrt(gamma1EF[i])*lower21, float(dephas)*np.sqrt(gammaphiGE[i])*Z10, float(dephas)*np.sqrt(gammaphiEF[i])*Z21, float(dephas)*np.sqrt(gammaphiFG[i])*Z02] for i in range(len(q_list))]
-    #L_1q = [[ np.sqrt(gamma1GE[i])*lower10, np.sqrt(gamma1EF[i])*lower21] for i in range(len(q_list))]
+    L_1q = [[ np.sqrt(iad.gamma1GE[i])*iad.lower10, np.sqrt(iad.gamma1EF[i])*iad.lower21, float(dephas)*np.sqrt(iad.gammaphiGE[i])*iad.Z10, float(dephas)*np.sqrt(iad.gammaphiEF[i])*iad.Z21, float(dephas)*np.sqrt(iad.gammaphiFG[i])*iad.Z02] for i in q_list_num]
+
     #Embed, multiply, embed, and add up 1-qutrit operators to get Lindbladian from decay only
     G_exp = sps.eye(3**(2*num_q))
-    for i in q_list_num:
+    for i in range(len(q_list_num)):
         totalLi = 0*np.eye(3**(1 + num_q-1 + 1))
         for Lm in L_1q[i]:
             totalLi += np.kron(np.kron(Lm.conj(),np.eye(3**(num_q-1))),Lm) - \
@@ -188,8 +188,10 @@ def actFullGateOnState(gate,rho_init,q_list,num_trot = 10,decoh=True,dephas = Tr
     num_q = round(math.log(np.shape(rho_init)[0],3)/2) #determine number of qutrits from size of rho
     rho = rho_init
     time_evol_saved = {}
+   
+
     for action in gate:
-        if type(action) == float:
+        if type(action) != tuple:
             if action in time_evol_saved.keys():
                 evol = time_evol_saved[action]
                 rho = evol.dot(rho)
@@ -204,3 +206,4 @@ def actFullGateOnState(gate,rho_init,q_list,num_trot = 10,decoh=True,dephas = Tr
             gate[action[0],action[0]] = np.exp(1j*action[2]) #set diagonal element to phase
             rho = (embedGate(gate,action[1],num_q)).dot(rho) #embed gate to act on action[1]^th qubit, act
     return rho
+

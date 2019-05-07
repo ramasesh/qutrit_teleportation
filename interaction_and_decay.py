@@ -12,29 +12,44 @@ import embed_functions
 reload(embed_functions)
 from embed_functions import *
 
+import yaml
+
 num_q = 2
 
-###
+with open('qutrit_decay.yaml', 'r') as f:
+    decay_parameters = yaml.load(f)
+with open('ZZ_eigenergies.yaml', 'r') as f:
+    ZZ_eigenergies = yaml.load(f)
+
+qutrit_ordering = [1,0,7,6,5]
+pairs = [(qutrit_ordering[i], qutrit_ordering[i+1]) for i in range(len(qutrit_ordering) - 1)]
+pair_strings = {pair:'Q{}Q{}'.format(pair[0], pair[1]) for pair in pairs}
+
+gamma1GE = [1./decay_parameters['Q{}'.format(q)]['T1_GE'] for q in qutrit_ordering]
+gamma1EF = [1./decay_parameters['Q{}'.format(q)]['T1_EF'] for q in qutrit_ordering]
+gammaphiEF = [1./decay_parameters['Q{}'.format(q)]['Tphi_EF'] for q in qutrit_ordering]
+gammaphiGE = [1./decay_parameters['Q{}'.format(q)]['Tphi_GE'] for q in qutrit_ordering]
+gammaphiFG = [1./decay_parameters['Q{}'.format(q)]['T1_EF'] for q in qutrit_ordering]
+
+alpha_11, alpha_12, alpha_21, alpha_22 = [], [], [], []
+for pair in pairs:
+    alpha_11.append(ZZ_eigenergies[pair_strings[pair]]['11'])
+    alpha_12.append(ZZ_eigenergies[pair_strings[pair]]['12'])
+    alpha_21.append(ZZ_eigenergies[pair_strings[pair]]['21'])
+    alpha_22.append(ZZ_eigenergies[pair_strings[pair]]['22'])
+alpha_11 = 2*np.pi*np.array(alpha_11)
+alpha_12 = 2*np.pi*np.array(alpha_12)
+alpha_21 = 2*np.pi*np.array(alpha_21)
+alpha_22 = 2*np.pi*np.array(alpha_22)
+
 # Parameters for specific qutrits:
 ###
 
-#Decay rates of all 5 qutrits, as a length-5 list for each decay
-#gamma1GE = [1./(40),1./(50)] # 1/s #original values
-#gamma1EF = [1./(26),1./(33)] # 1/s
-gamma1GE = [1./(50.),1./(50.),1./(50.),1./(50.),1./(50.)]
-gamma1EF = [1./(30.),1./(30.),1./(30.),1./(30.),1./(30.)]
-
-gammaphiGE = [1/(60),1/(60),1/(60),1/(60),1/(60)] # 1/s
-gammaphiEF = [1/(45),1/(45),1/(45),1/(45),1/(45)] # 1/s
-# gammaphiGE = [0,0,0,0,0] # 1/s #set to zero for now
-# gammaphiEF = [0,0,0,0,0] # 1/s
-gammaphiFG = [0,0,0,0,0] # 1/s
-
 #Interactions for each neighboring pair of qutrits, as a length 4 list for (10) (07) (76) (65) pairs
-alpha_11 = [2 * np.pi * -0.27935, 2 * np.pi * -.1382, 2 * np.pi * -0.276, 2 * np.pi * -0.26175] # MHz
-alpha_12 = [2 * np.pi * 0.1599, 2 * np.pi * .15827, 2 * np.pi * -0.6313, 2 * np.pi * -0.49503] # MHz
-alpha_21 = [2 * np.pi * -0.52793, 2 * np.pi * -.33507, 2 * np.pi * 0.24327, 2 * np.pi * 0.14497] # Hz
-alpha_22 = [2 * np.pi * -0.742967, 2 * np.pi * -.3418, 2 * np.pi * -0.74777, 2 * np.pi * -0.70843] # MHz
+#alpha_11 = [2 * np.pi * -0.27935, 2 * np.pi * -.1382, 2 * np.pi * -0.276, 2 * np.pi * -0.26175] # MHz
+#alpha_12 = [2 * np.pi * 0.1599, 2 * np.pi * .15827, 2 * np.pi * -0.6313, 2 * np.pi * -0.49503] # MHz
+#alpha_21 = [2 * np.pi * -0.52793, 2 * np.pi * -.33507, 2 * np.pi * 0.24327, 2 * np.pi * 0.14497] # Hz
+#alpha_22 = [2 * np.pi * -0.742967, 2 * np.pi * -.3418, 2 * np.pi * -0.74777, 2 * np.pi * -0.70843] # MHz
 
 ###
 # Lots of "fake" couplings to check code was working as expected:
@@ -87,16 +102,7 @@ Z21 = np.diag([0,-1,1]) #dephasing
 Z10 = np.diag([-1,1,0])
 Z02 = np.diag([1,0,-1])
 #Vinay's dephasing operators
-Z10 = np.diag([1,-1,-1])
-Z21 = np.diag([-1,1,-1])
-Z02 = np.diag([0,0,0])
+# Z10 = np.diag([1,-1,-1])
+# Z21 = np.diag([-1,1,-1])
+# Z02 = np.diag([-1,-1,1])
 
-###
-#Old way of doing things:
-###
-# H = np.diag([0,0,0,   0,alpha_11[0],alpha_12[0],   0,alpha_21[0],alpha_22[0]])
-# H_double = -1j*(np.kron(H,np.eye(9)) - np.kron(np.eye(9),H.conj()))
-
-# #2-qutrit Linblad evolution matrix
-# G = np.asarray([np.kron(Lm.conj(),Lm) - (1./2.)*np.kron(np.eye(9),np.dot(Lm.conj().T,Lm)) \
-#     - (1./2.)*np.kron(np.dot(Lm.conj().T,Lm),np.eye(9)) for Lm in L]).sum(axis=0)

@@ -4,6 +4,7 @@ import scipy as sc
 
 import sim_tools
 import evolution
+import state_prep
 from functools import reduce
 
 def ideal_T1(qubit,time):
@@ -157,4 +158,15 @@ def test_depol(p):
 
     print('Difference (should be zero)')
     print(np.linalg.norm(rho_depol1 - rho_depol2, ord=2))
-    
+  
+def test_EPR():
+    """ tests that the EPR fidelity is equal to the desired fidelity """
+
+    desired_fidelities = np.linspace(0, 1, 20)
+
+    actual_fidelities = np.real(np.array([sim_tools.fidelity(state_prep.rho_EPR_ideal.todense(), state_prep.EPR_w_depol(fid)) for fid in desired_fidelities]))
+
+    print('Desired fidelities')
+    print(desired_fidelities)
+    print('Actual fidelities')
+    print(actual_fidelities)

@@ -45,16 +45,17 @@ ZZ3_gatelist = Cphase3_gatelist + [("Hadamardc",0),("Hadamardc",1)] + Cphase3_ga
 #ZZ4
 Tw = Delta/3.
 Cphase4_p1_gatelist = [Tw,("flip01",0),("flip01",1),("flip12",2),("flip12",3),Tw,("flip12",0),("flip12",1),("flip01",2),("flip01",3)]
+Cphase4_p1_gatelist_2 = [("flip01",0),("flip01",1),("flip12",2),("flip12",3),Tw,("flip12",0),("flip12",1),("flip01",2),("flip01",3),Tw]
 Cphase4_sq = [(1,0,2*np.pi/3),(2,0,2*np.pi/3),(1,1,2*np.pi/3),(2,1,2*np.pi/3),(1,2,2*np.pi/3),(2,2,2*np.pi/3),(1,3,2*np.pi/3),(2,3,2*np.pi/3)]
-DP1 = 0*(2*Delta/3.)*np.array([0, alpha_11[1] + alpha_12[1], alpha_21[1] + alpha_22[1] ])
-DP2 = 0*(2*Delta/3.)*np.array([0, alpha_11[1] + alpha_21[1], alpha_12[1] + alpha_22[1] ])
 DP4 = (2*Delta/3.)*np.array([0, alpha_11[3] + alpha_21[3], alpha_12[3] + alpha_22[3] ])
-DP = [(1,1,DP1[1]),(2,1,DP1[2]),(1,2,DP2[1]),(2,2,DP2[2]),(1,4,DP4[1]),(2,4,DP4[2])]
+DP = [(1,4,DP4[1]),(2,4,DP4[2])]
 Cphase4_gatelist = Cphase4_p1_gatelist + Cphase4_p1_gatelist + Cphase4_p1_gatelist + Cphase4_sq + DP
-ZZ4_gatelist = [("Hadamard",1),("Hadamard",2)] + Cphase4_gatelist + [("Hadamardc",0),("Hadamard",1),("Hadamardc",2),("Hadamard",3)] + Cphase4_gatelist + [("Hadamardc",1),("Hadamardc",2)]
 
-standard_scrambler_gatelist = [("flip12",1)] + Cphase4_gatelist + [("Hadamard",0),("Hadamardc",1),("Hadamardc",2),("Hadamard",3)] + Cphase4_gatelist + [("flip12",3)]
-EF_scrambler_gatelist = [("Hadamard",1),("Hadamard",2)] + Cphase4_gatelist + [("Hadamardc",0),("Hadamard",1),("Hadamard",2),("Hadamardc",3)] + Cphase4_gatelist + [("Hadamardc",0),("Hadamardc",3)]
+Cphase4_1 = Cphase4_sq + DP + Cphase4_p1_gatelist + Cphase4_p1_gatelist + Cphase4_p1_gatelist 
+Cphase4_2 = Cphase4_p1_gatelist_2 + Cphase4_p1_gatelist_2 + Cphase4_p1_gatelist_2 + Cphase4_sq + DP  
+
+EF_scrambler_gatelist = [("flip12",1)] + Cphase4_1 + [("Hadamard",0),("Hadamardc",1),("Hadamardc",2),("Hadamard",3)] + Cphase4_2 + [("flip12",3)]
+standard_scrambler_gatelist = [("Hadamard",1),("Hadamard",2)] + Cphase4_gatelist + [("Hadamardc",0),("Hadamard",1),("Hadamard",2),("Hadamardc",3)] + Cphase4_gatelist + [("Hadamardc",0),("Hadamardc",3)]
 
 #ZZ4 offset (Norm's idea) - doesn't seem to improve, makes slightly worse
 Cphase4_p1_gatelist = [Tw/2.,("flip01",0),("flip01",1),Tw/2.,("flip12",2),("flip12",3),Tw/2.,("flip12",0),("flip12",1),Tw/2.,("flip01",2),("flip01",3)]

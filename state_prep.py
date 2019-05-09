@@ -122,3 +122,13 @@ two_design_states = [np.array([1., 0., 0.]),
                      np.array([1., 1., w2])/np.sqrt(3)]
 
 
+def EPR_w_depol(fidelity):
+    """ returns an EPR pair that has gone through a depolarizing channel, such that the fidelity of the EPR pair is 
+        equal to the value given """
+    
+    prob_depol = np.min([9./8*(1-fidelity), 1]) 
+
+    rho_EPR_out = (1 - prob_depol)*rho_EPR_ideal + prob_depol*np.eye(9)/9
+
+    return rho_EPR_out
+
